@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Record System - El Royale Hotelier Training Center Inc.</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Firebase SDKs Compat -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+  <!-- LOGIN & SIGNUP SCREEN -->
+  <div id="login-view">
+    <div class="login-container">
+      <div class="login-hero">
+        <div>
+          <div class="brand-badge"><i class="fa-solid fa-graduation-cap"></i> Portal</div>
+          <h1>STUDENT RECORD SYSTEM</h1>
+          <h2>El Royale Hotelier Training Center Inc.</h2>
+        </div>
+        <div class="tagline">
+          <p>Online Clearance & Academic Tracking</p>
+          <div class="motto-box">
+            <p><em>Your Records. Your Progress. Our Priority.</em></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="login-form-side">
+        <!-- MODE TOGGLE BUTTONS (LOGIN VS REGISTER) -->
+        <div class="auth-mode-toggle">
+          <button type="button" class="mode-tab active" id="tab-login" onclick="toggleAuthMode('login')">Login</button>
+          <button type="button" class="mode-tab" id="tab-signup" onclick="toggleAuthMode('signup')">Sign Up</button>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <div id="login-form-container">
+          <div class="login-header">
+            <h3>Welcome Back</h3>
+            <p>Access your clearance dashboard</p>
+          </div>
+          <form id="loginForm" onsubmit="handleLogin(event)" autocomplete="off">
+            <div class="form-group">
+              <i class="fa-solid fa-user"></i>
+              <input type="text" class="form-control" id="login-identifier" placeholder="Email / Full Name" required autocomplete="off">
+            </div>
+            <div class="form-group password-group">
+              <i class="fa-solid fa-lock"></i>
+              <input type="password" class="form-control" id="login-password" placeholder="Password" required autocomplete="new-password">
+              <i class="fa-solid fa-eye password-toggle-icon" onclick="togglePasswordVisibility('login-password', this)"></i>
+            </div>
+            <button type="submit" class="btn-primary">Login to System</button>
+          </form>
+        </div>
+
+        <!-- SIGNUP / REGISTRATION FORM -->
+        <div id="signup-form-container" style="display: none;">
+          <div class="login-header">
+            <h3>Create Account</h3>
+            <p>Register new user profile</p>
+          </div>
+          <form id="signupForm" onsubmit="handleSignup(event)" autocomplete="off">
+            <div class="form-group">
+              <i class="fa-solid fa-id-card"></i>
+              <input type="text" class="form-control" id="signup-fullname" placeholder="Full Name" required autocomplete="off">
+            </div>
+            <div class="form-group">
+              <i class="fa-solid fa-envelope"></i>
+              <input type="email" class="form-control" id="signup-email" placeholder="Email (e.g., user@gmail.com)" required autocomplete="off">
+            </div>
+            <div class="form-group password-group">
+              <i class="fa-solid fa-lock"></i>
+              <input type="password" class="form-control" id="signup-password" placeholder="Password (Min 6 chars)" required autocomplete="new-password">
+              <i class="fa-solid fa-eye password-toggle-icon" onclick="togglePasswordVisibility('signup-password', this)"></i>
+            </div>
+            <button type="submit" class="btn-primary">Complete Sign Up</button>
+          </form>
+        </div>
+
+        <div class="role-divider">
+          <span>ROLE SELECTION</span>
+        </div>
+
+        <div class="role-switcher">
+          <button type="button" class="role-btn active" id="btn-role-student" onclick="setRole('student')">
+            <i class="fa-solid fa-user-graduate"></i> Student
+          </button>
+          <button type="button" class="role-btn" id="btn-role-teacher" onclick="setRole('teacher')">
+            <i class="fa-solid fa-chalkboard-user"></i> Teacher
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APPLICATION VIEW -->
+  <div id="app-view" style="display: none;">
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="app-sidebar">
+      <div class="sidebar-header">
+        <i class="fa-solid fa-graduation-cap logo-icon"></i>
+        <div class="title-text">
+          <h2>Student Record System</h2>
+          <p>El Royale Training Center</p>
+        </div>
+      </div>
+
+      <div class="sidebar-menu" id="sidebar-menu">
+        <!-- Dynamic sidebar menu -->
+      </div>
+
+      <div class="sidebar-footer">
+        <a href="#" class="nav-item" onclick="logout()">
+          <i class="fa-solid fa-right-from-bracket"></i>
+          <span>Logout</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-wrapper">
+      <div class="top-header">
+        <button class="mobile-toggle-btn" onclick="toggleMobileSidebar()">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+        <div class="user-profile-nav" onclick="switchView('profile-view')">
+          <img id="nav-avatar-img" class="user-avatar-img" src="" style="display:none;" />
+          <div class="user-avatar" id="nav-avatar">U</div>
+          <div class="user-info">
+            <div class="name" id="nav-name">User Name</div>
+            <div class="role" id="nav-role">Role</div>
+          </div>
+          <i class="fa-solid fa-chevron-down" style="font-size: 11px; opacity: 0.6; margin-left: 6px;"></i>
+        </div>
+      </div>
+
+      <div class="content-area">
+
+        <!-- STUDENT VIEWS -->
+        <div id="student-dashboard" class="view-section">
+          <div class="welcome-banner">
+            <h1 id="student-welcome-title">Good morning!</h1>
+            <p>Clearance status & school agenda</p>
+          </div>
+
+          <div class="grid-2-col">
+            <div class="card progress-circle-container">
+              <div class="circle-progress">
+                <span id="student-progress-val">0%</span>
+              </div>
+              <div>
+                <h3>Clearance Progress</h3>
+                <p class="sub-text" id="student-progress-sub">0 subjects approved</p>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header-flex">
+                <h3><i class="fa-regular fa-calendar-days text-blue"></i> Class Schedule</h3>
+                <span class="sub-text">Current Schedule</span>
+              </div>
+              <div class="schedule-list" id="dashboard-schedule-list">
+                <!-- Dynamically populated schedules -->
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header-flex">
+              <h3>Subject Clearance Status</h3>
+              <input type="text" id="subject-search-input" class="form-control" style="width: 220px;" placeholder="Search subject or teacher..." onkeyup="filterStudentSubjects()">
+            </div>
+            <div class="table-container margin-top-15">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Subject</th>
+                    <th>Teacher</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="student-subjects-list">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="grid-3-col">
+            <div class="card action-card" onclick="switchView('student-submit-req')">
+              <i class="fa-solid fa-file-arrow-up icon-blue"></i>
+              <h4>Submit Requirements</h4>
+              <p class="sub-text">Upload clearance documents</p>
+            </div>
+            <div class="card action-card" onclick="switchView('student-missed-activities')">
+              <i class="fa-solid fa-calendar-xmark icon-blue"></i>
+              <h4>Missed Activities</h4>
+              <p class="sub-text">Check catch-up tasks</p>
+            </div>
+            <div class="card action-card" onclick="switchView('attendance-view')">
+              <i class="fa-solid fa-user-check icon-blue"></i>
+              <h4>Attendance & Log</h4>
+              <p class="sub-text">Daily attendance history</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit Requirement View -->
+        <div id="student-submit-req" class="view-section">
+          <a class="back-btn" onclick="switchView('student-dashboard')"><i class="fa-solid fa-arrow-left"></i> Back to Clearance</a>
+          <h2>Submit Requirement</h2>
+
+          <div class="card margin-top-20">
+            <div class="subject-header-box">
+              <div class="subject-icon">
+                <i class="fa-solid fa-book"></i>
+              </div>
+              <div>
+                <span class="sub-text">Subject</span>
+                <h3 id="upload-subject-title">Subject Name</h3>
+              </div>
+            </div>
+
+            <div class="margin-bottom-20">
+              <h4 class="text-blue margin-bottom-8">Submission Rules</h4>
+              <ul class="styled-list">
+                <li>Attach your finished assignment or scanned document.</li>
+                <li>Make sure file format is complete (PDF, DOCX, or Image).</li>
+              </ul>
+            </div>
+
+            <div class="upload-zone" onclick="document.getElementById('file-upload').click()">
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+              <h4 id="upload-file-label">Choose File</h4>
+              <p>or drag and drop here</p>
+              <p class="sub-text-sm">Supported formats: PDF, DOC, DOCX, JPG, PNG (Max 10MB)</p>
+              <input type="file" id="file-upload" style="display: none;" onchange="handleFileSelect(event)">
+            </div>
+
+            <button class="btn-primary" onclick="submitRequirement()">Upload & Submit</button>
+          </div>
+        </div>
+
+        <!-- Missed Activities View -->
+        <div id="student-missed-activities" class="view-section">
+          <h2>Missed School Activities</h2>
+          <p class="sub-text margin-bottom-20">View pending makeup tasks and assignments.</p>
+
+          <div class="card">
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Subject</th>
+                    <th>Activity</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="missed-activities-list">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ATTENDANCE VIEW -->
+        <div id="attendance-view" class="view-section">
+          <h2>Attendance Log</h2>
+          <p class="sub-text margin-bottom-20">Track daily check-ins and session records.</p>
+
+          <div class="card">
+            <div class="card-header-flex">
+              <h3>Today's Check-in</h3>
+              <button class="btn-primary btn-auto" onclick="markSelfAttendance()">Clock In / Mark Present</button>
+            </div>
+            <p id="attendance-status-text" class="sub-text margin-top-10">Status for today: <strong>Not Marked Yet</strong></p>
+          </div>
+
+          <div class="card">
+            <h3>Attendance History</h3>
+            <div class="table-container margin-top-15">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Name</th>
+                    <th>Time In</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="attendance-history-list">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- PROFILE VIEW WITH PHOTO UPLOAD -->
+        <div id="profile-view" class="view-section">
+          <h2>User Profile</h2>
+          <p class="sub-text margin-bottom-20">Manage profile details and avatar picture.</p>
+
+          <div class="card">
+            <div class="profile-header-box">
+              <div class="profile-photo-wrapper">
+                <img id="profile-img-preview" src="" style="display:none;" />
+                <div class="user-avatar profile-avatar-lg" id="profile-avatar-big">U</div>
+                <label for="profile-photo-input" class="photo-edit-btn" title="Upload Photo">
+                  <i class="fa-solid fa-camera"></i>
+                </label>
+                <input type="file" id="profile-photo-input" accept="image/*" style="display:none;" onchange="handleProfilePhotoUpload(event)">
+              </div>
+              <div>
+                <h3 id="profile-fullname-text">User Name</h3>
+                <p id="profile-role-text" class="sub-text">Student</p>
+              </div>
+            </div>
+
+            <form onsubmit="saveProfileChanges(event)">
+              <div class="form-group margin-bottom-15">
+                <label class="form-label">Full Name</label>
+                <input type="text" class="form-control" id="profile-input-fullname" required>
+              </div>
+              <div class="form-group margin-bottom-15">
+                <label class="form-label">Email Address</label>
+                <input type="email" class="form-control" id="profile-input-email" disabled style="background:#f1f5f9; cursor:not-allowed;">
+              </div>
+              <div class="form-group margin-bottom-15">
+                <label class="form-label">Phone / Contact Number</label>
+                <input type="text" class="form-control" id="profile-input-phone" placeholder="e.g. +63 912 345 6789">
+              </div>
+              <div class="form-group margin-bottom-20">
+                <label class="form-label">Short Bio / Status</label>
+                <input type="text" class="form-control" id="profile-input-bio" placeholder="e.g. Hospitality Management Student">
+              </div>
+              <button type="submit" class="btn-primary btn-auto">Save Profile Changes</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- TEACHER VIEWS -->
+        <div id="teacher-dashboard" class="view-section">
+          <div class="welcome-banner">
+            <h1 id="teacher-welcome-title">Good morning, Teacher!</h1>
+            <p>Clearance management & schedule manager</p>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-card blue">
+              <i class="fa-solid fa-users"></i>
+              <div>
+                <div class="val" id="stat-pending-count">0</div>
+                <div class="lbl">Pending Approvals</div>
+              </div>
+            </div>
+            <div class="stat-card green">
+              <i class="fa-solid fa-circle-check"></i>
+              <div>
+                <div class="val" id="stat-approved-count">0</div>
+                <div class="lbl">Approved Students</div>
+              </div>
+            </div>
+            <div class="stat-card purple">
+              <i class="fa-solid fa-calendar-plus"></i>
+              <div>
+                <div class="val" id="stat-schedules-count">0</div>
+                <div class="lbl">My Subjects Created</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TEACHER SCHEDULE MANAGER CARD -->
+          <div class="card">
+            <div class="card-header-flex">
+              <h3>My Subjects & Schedule (Teacher Control)</h3>
+              <button class="btn-primary btn-auto" onclick="promptAddSchedule()"><i class="fa-solid fa-plus"></i> Add Class Schedule</button>
+            </div>
+            <p class="sub-text margin-top-5">Only you can manage the subjects you create. Students can view and submit requirements to them.</p>
+
+            <div class="table-container margin-top-15">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Subject</th>
+                    <th>Time</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="teacher-schedule-table">
+                  <!-- Dynamically populated teacher schedule manager -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Student Submissions for My Subjects</h3>
+            <div class="table-container margin-top-15">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Student Name</th>
+                    <th>Subject</th>
+                    <th>Submitted File</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="teacher-submissions-list">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Teacher Review View -->
+        <div id="teacher-review-req" class="view-section">
+          <a class="back-btn" onclick="switchView('teacher-dashboard')"><i class="fa-solid fa-arrow-left"></i> Back to Approvals</a>
+          <h2>Review Clearance Requirement</h2>
+
+          <div class="card margin-top-20">
+            <div class="subject-header-box">
+              <i class="fa-solid fa-circle-user icon-lg-user"></i>
+              <div>
+                <h3 id="review-student-name">Student Name</h3>
+                <p class="sub-text" id="review-subject">Subject: Subject Name</p>
+              </div>
+            </div>
+
+            <div class="margin-bottom-20">
+              <h4 class="margin-bottom-10">Submitted Requirement File</h4>
+              <div class="file-preview-bar">
+                <div class="file-info-group">
+                  <i class="fa-solid fa-file-pdf icon-pdf"></i>
+                  <div>
+                    <strong id="review-file-name">Submission.pdf</strong>
+                  </div>
+                </div>
+                <button class="btn-sm btn-blue-bg" id="download-file-btn" onclick="downloadSubmissionFile()">Download File</button>
+              </div>
+            </div>
+
+            <div>
+              <h4 class="margin-bottom-8">Teacher Feedback / Remarks</h4>
+              <textarea class="remarks-input" id="teacher-remarks" placeholder="Type remarks for the student..."></textarea>
+            </div>
+
+            <div class="btn-action-group">
+              <button class="btn-success" onclick="updateRequirementStatus('Approved')"><i class="fa-solid fa-check"></i> Approve</button>
+              <button class="btn-danger" onclick="updateRequirementStatus('Returned')"><i class="fa-solid fa-rotate-left"></i> Return</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
